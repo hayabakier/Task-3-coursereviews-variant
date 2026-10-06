@@ -15,16 +15,20 @@ export default function ReviewForm() {
   const [error, setError] = useState('')
 
   // TODO (edit mode): when there is an `id`, load the review and fill the form.
-  useEffect(() => {
-    if (!id) return
-    api.get(`/reviews/${id}`)
-      .then(res =>{
-      const { courseCode, rating, comment } = res.data
-      setForm({ courseCode, rating, comment: comment || '' })
-  })
-      .catch(err => setError(err.response.data?.message || 'Failed to load review'))
-  }, [id])
-
+ useEffect(() => {
+  if (!id) return
+  api.get(`/reviews/${id}`)
+    .then(res => {
+      const r = res.data.review || res.data
+      console.log('review:', r)
+      setForm({
+        courseCode: r.courseCode ?? '',
+        rating: r.rating ?? 5,
+        comment: r.comment ?? ''
+      })
+    })
+    .catch(err => setError(err.response?.data?.message || 'Failed to load review'))
+}, [id])
   // TODO: update `form` when an input changes (rating should be a number).
   function onChange(e) {
     const { name, value } = e.target
