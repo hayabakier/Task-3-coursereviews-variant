@@ -17,12 +17,21 @@ export default function ReviewForm() {
   // TODO (edit mode): when there is an `id`, load the review and fill the form.
   useEffect(() => {
     if (!id) return
-    // TODO
+    api.get(`/reviews/${id}`)
+      .then(res =>{
+      const { courseCode, rating, comment } = res.data
+      setForm({ courseCode, rating, comment: comment || '' })
+  })
+      .catch(err => setError(err.response.data?.message || 'Failed to load review'))
   }, [id])
 
   // TODO: update `form` when an input changes (rating should be a number).
   function onChange(e) {
-    // TODO
+    const { name, value } = e.target
+    setForm(prev => ({
+      ...prev,
+      [name]: name === 'rating' ? Number(value) : value
+    }))
   }
 
   // TODO: POST a new review, or PATCH the existing one when editing,
@@ -30,14 +39,43 @@ export default function ReviewForm() {
   async function onSubmit(e) {
     e.preventDefault()
     setError('')
-    // TODO
+    try{
+      const { courseCode, rating, comment } = form
+      if(id){
+        await api.patch(`/reviews/${id}`, { courseCode, rating, comment })
+      }
+      else
+        await api.post('/reviews', { courseCode, rating, comment })
+      nav('/reviews')
+    }
+    catch(err){
+      setError(err.response.data?.message || 'Something went wrong')
+    }
   }
 
   return (
     <div className="max-w-lg mx-auto card">
       <h1 className="text-xl font-semibold mb-4">{id ? 'Edit' : 'Write'} Review</h1>
       <form onSubmit={onSubmit} className="space-y-3">
-        {/* TODO: course code input, rating select (1-5) and comment textarea */}
+        <input 
+        name="courseCode"
+        value={form.courseCode}
+        onChange={onChange}
+        placeholder="CS101"
+        className="input"
+        required
+        />
+        <select name="rating" value={form.rating} onChange={onChange} className="input">
+          {[1, 2, 3, 4, 5].map(n => <option key={n} value ={n}>{n} </option>)}
+        </select>
+
+        <textarea
+          name="comment"
+          value={form.comment}
+          onChange={onChange}
+          placeholder="Comment(optional)"
+          className="input"
+        />
         {error && <div className="text-red-600 text-sm">{error}</div>}
         <button className="btn" type="submit">Save</button>
       </form>
